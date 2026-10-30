@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "snapshot": "2026-10-30T14:47:11.360Z",
+  "project": "glass",
+  "root": ".",
+  "method": "static-local-index",
+  "limitations": [
+    "Нет динамических вызовов и сетевых интеграций",
+    "Сверять sha256 и evidence.line с текущими исходниками",
+    "Наличие зависимости не доказывает работоспособность"
+  ],
+  "nodes": [
+    {
+      "id": "project:glass",
+      "type": "project",
+      "name": "glass"
+    },
+    {
+      "id": "project:glass/file:_config.yml",
+      "type": "file",
+      "path": "_config.yml"
+    }
+  ],
+  "edges": [
+    {
+      "source": "project:glass",
+      "target": "project:glass/file:_config.yml",
+      "relation": "contains",
+      "evidence": {
+        "path": "_config.yml"
+      },
+      "method": "filesystem"
+    }
+  ]
+}
