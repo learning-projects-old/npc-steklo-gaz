@@ -1,0 +1,47 @@
+[
+  {
+    "program": "PLOT6",
+    "case": "original",
+    "nodes": 6987,
+    "max_absolute_error": 0.010460149650498352,
+    "max_relative_error_above_unit": 1.1302027469919014e-05,
+    "passed": true
+  },
+  {
+    "program": "PLOT6",
+    "case": "voltage",
+    "nodes": 6987,
+    "max_absolute_error": 0.015218865499264211,
+    "max_relative_error_above_unit": 1.1183378795298626e-05,
+    "passed": true
+  },
+  {
+    "program": "PLOT6",
+    "case": "rho",
+    "nodes": 6987,
+    "max_absolute_error": 0.005230074825249176,
+    "max_relative_error_above_unit": 1.1302027469919014e-05,
+    "passed": true
+  },
+  {
+    "program": "TOKP1",
+    "case": "CIRCLE.DAT",
+    "reference_voltage": 91.82806,
+    "python_voltage": 91.82805022053489,
+    "passed": true
+  },
+  {
+    "program": "TOKP1",
+    "case": "BOX.DAT",
+    "reference_voltage": 73.2281,
+    "python_voltage": 73.22809905309154,
+    "passed": true
+  },
+  {
+    "program": "TOK",
+    "case": "fixed complex voltages",
+    "output_filename_patched": true,
+    "max_current_error": 6.137432239938789e-05,
+    "passed": true
+  }
+]

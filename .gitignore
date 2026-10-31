@@ -1,0 +1,4 @@
+.idea/*
+!.idea/.name
+!.idea/icon.png
+!.idea/icon_dark.png

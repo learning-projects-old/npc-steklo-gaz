@@ -1,0 +1,60 @@
+{
+  "minimal_environment": true,
+  "checks": [
+    {
+      "executable": "TOK26-console.exe",
+      "source": "CIRCLE.DAT",
+      "passed": true
+    },
+    {
+      "executable": "TOK26-console.exe",
+      "source": "BOX.DAT",
+      "passed": true
+    },
+    {
+      "executable": "TOK26.exe",
+      "source": "CIRCLE.DAT",
+      "passed": true
+    },
+    {
+      "executable": "TOK26-fast.exe",
+      "source": "CIRCLE.DAT",
+      "passed": true
+    },
+    {
+      "executable": "TOK26-console.exe",
+      "source": "PLOT6.DAT",
+      "mode": "field",
+      "passed": true
+    },
+    {
+      "executable": "TOK26.exe",
+      "source": "PLOT6.DAT",
+      "mode": "field",
+      "passed": true
+    },
+    {
+      "executable": "TOK26-fast.exe",
+      "source": "PLOT6.DAT",
+      "mode": "field",
+      "passed": true
+    }
+  ],
+  "binaries": [
+    {
+      "file": "TOK26-console.exe",
+      "bytes": 13174835,
+      "sha256": "8d1d2d16429952d821287bd7e8dbb20b26521b3d2bd5e8d52e47331e03854f7a"
+    },
+    {
+      "file": "TOK26-fast.exe",
+      "bytes": 13168415,
+      "sha256": "b98dc6f610a8dd2d379691d25a82149c9161e9da7c02149394f3cf5af93efec7"
+    },
+    {
+      "file": "TOK26.exe",
+      "bytes": 13168442,
+      "sha256": "f2d6366be3673721e5b9519107c0dfe7e4f78c1a35e52d8ed2896185a56b597d"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+-r requirements-build.txt
+capstone==5.0.9
+xlrd==2.0.2
+olefile==0.47

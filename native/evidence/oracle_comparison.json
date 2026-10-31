@@ -1,0 +1,163 @@
+[
+  {
+    "directory": "C0000",
+    "source": "CIRCLE.DAT",
+    "passed": true,
+    "max_voltage_error": 9.77946510261063e-06,
+    "max_current_error_against_rounded_report": 0.47126324259738794,
+    "dos_voltages": [
+      91.82806
+    ],
+    "python_voltages": [
+      91.82805022053489
+    ]
+  },
+  {
+    "directory": "C0001",
+    "source": "BOX.DAT",
+    "passed": true,
+    "max_voltage_error": 9.469084574220688e-07,
+    "max_current_error_against_rounded_report": 0.451800743256797,
+    "dos_voltages": [
+      73.2281
+    ],
+    "python_voltages": [
+      73.22809905309154
+    ]
+  },
+  {
+    "directory": "C0002",
+    "source": "CHRUSTAL/PL05T.DAT",
+    "passed": true,
+    "max_voltage_error": 3.0234325109290694e-05,
+    "max_current_error_against_rounded_report": 0.1634874445871901,
+    "dos_voltages": [
+      86.53719
+    ],
+    "python_voltages": [
+      86.53715976567489
+    ]
+  },
+  {
+    "directory": "C0003",
+    "source": "SPEZ/BOROSIL0",
+    "passed": true,
+    "max_voltage_error": 0.00026102266917860106,
+    "max_current_error_against_rounded_report": 0.3282220069717994,
+    "dos_voltages": [
+      155.6772
+    ],
+    "python_voltages": [
+      155.67693897733082
+    ]
+  },
+  {
+    "directory": "C0004",
+    "source": "TARA/TARA.DAT",
+    "passed": true,
+    "max_voltage_error": 1.929592175997641e-05,
+    "max_current_error_against_rounded_report": 0.49180728382475536,
+    "dos_voltages": [
+      105.5631,
+      16.55666,
+      15.72933
+    ],
+    "python_voltages": [
+      105.56308070407825,
+      16.55664886361877,
+      15.729335562267496
+    ]
+  },
+  {
+    "directory": "C0005",
+    "source": "DEP/ANOP3.DAT",
+    "passed": true,
+    "max_voltage_error": 3.586600911376081e-06,
+    "max_current_error_against_rounded_report": 0.4730577078854594,
+    "dos_voltages": [
+      99.24771
+    ],
+    "python_voltages": [
+      99.24770641339909
+    ]
+  },
+  {
+    "directory": "C0006",
+    "source": "BESCWET/SALAWATE.DAT",
+    "passed": true,
+    "max_voltage_error": 1.022107424830665e-05,
+    "max_current_error_against_rounded_report": 0.4818591345284631,
+    "dos_voltages": [
+      71.93407,
+      71.93652,
+      71.93407,
+      71.93652,
+      376.0968
+    ],
+    "python_voltages": [
+      71.93407068747914,
+      71.93653022107425,
+      71.93407068747914,
+      71.93653022107425,
+      376.0968023835269
+    ]
+  },
+  {
+    "directory": "C0007",
+    "source": "DEP/300T",
+    "passed": true,
+    "max_voltage_error": 2.702135645904491e-06,
+    "max_current_error_against_rounded_report": 0.4779658083812137,
+    "dos_voltages": [
+      88.14969
+    ],
+    "python_voltages": [
+      88.14968729786436
+    ]
+  },
+  {
+    "directory": "C0008",
+    "source": "PITATEL/SALESJE1",
+    "passed": true,
+    "max_voltage_error": 9.361507338212505e-07,
+    "max_current_error_against_rounded_report": 0.3986166809261711,
+    "dos_voltages": [
+      53.93399
+    ],
+    "python_voltages": [
+      53.933990936150735
+    ]
+  },
+  {
+    "directory": "C0009",
+    "source": "SPEZ/E207.DAT",
+    "passed": true,
+    "max_voltage_error": 1.808601763286788e-05,
+    "max_current_error_against_rounded_report": 0.49249596743732127,
+    "dos_voltages": [
+      184.2654,
+      4.77764
+    ],
+    "python_voltages": [
+      184.26538191398237,
+      4.7776387925735335
+    ]
+  },
+  {
+    "directory": "C0010",
+    "source": "TARA2/TARA.DAT",
+    "passed": true,
+    "max_voltage_error": 1.929592175997641e-05,
+    "max_current_error_against_rounded_report": 0.49180728382475536,
+    "dos_voltages": [
+      105.5631,
+      16.55666,
+      15.72933
+    ],
+    "python_voltages": [
+      105.56308070407825,
+      16.55664886361877,
+      15.729335562267496
+    ]
+  }
+]

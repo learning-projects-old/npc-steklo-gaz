@@ -1,0 +1,22 @@
+{
+  "source": "E:\\dev\\apps\\npc-steklo-gaz\\ТОК1\\TOKP.EXE",
+  "sha256": "177ddef91d4fce020956e11cc8dfe04c6e1827d324cc60a080c0f43dfa4c76a0",
+  "MZ_header_bytes": 2048,
+  "data_segment_relative": "0D68",
+  "common_segment_relative": "0AAA",
+  "constants": {
+    "DS:10C2": 2.0,
+    "DS:10CE": 3.141592502593994,
+    "DS:10D2": 1.0,
+    "DS:10D6": 4.0,
+    "DS:10DA": 6.283185005187988
+  },
+  "math_functions": {
+    "0329:1407": "log",
+    "0329:1417": "sin",
+    "0329:141D": "cos",
+    "0329:142C": "sinh",
+    "0329:1432": "cosh",
+    "0329:143C": "sqrt"
+  }
+}
