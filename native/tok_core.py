@@ -42,28 +42,39 @@ def parse_dat(text, name="Расчёт"):
     """Читает текст DAT для GUI и CLI; не смешивает форматы PTOK и PLOT6.
 
     Поддерживает круглые/плоские электроды, заданные мощности и заданные
-    комплексные напряжения. Некорректные размеры и остаток файла — ошибка.
+    комплексные напряжения. Диагностика сохраняет номера строк DAT и объясняет
+    смещение разделов при лишних номерах пар, не ограничивая допустимые переносы.
     """
     text = text.split("\x1a", 1)[0]
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    source_lines = [(i, line.strip()) for i, line in enumerate(text.splitlines(), 1) if line.strip()]
+    lines = [line for _, line in source_lines]
     if not lines:
         raise CalculationError("Файл пуст.")
-    try:
-        header = [float(t.replace("D", "E").replace("d", "e")) for t in lines[0].split()]
-        values = [float(t.replace("D", "E").replace("d", "e")) for line in lines[1:] for t in line.split()]
-    except ValueError as error:
-        raise CalculationError("Ожидались числа с точкой; текстовые и двоичные файлы не поддерживаются.") from error
-    if not all(math.isfinite(v) for v in header + values):
-        raise CalculationError("NaN и бесконечные значения недопустимы.")
+    parsed_lines = []
+    for line_number, line in source_lines:
+        row = []
+        for column, token in enumerate(line.split(), 1):
+            try:
+                value = float(token.replace("D", "E").replace("d", "e"))
+            except ValueError as error:
+                raise CalculationError(f"DAT, строка {line_number}, значение № {column}: «{token}» не является числом. Введите число с десятичной точкой, например 0.24.") from error
+            if not math.isfinite(value):
+                raise CalculationError(f"DAT, строка {line_number}, значение № {column}: «{token}» недопустимо. Замените NaN или бесконечность конечным числом.")
+            row.append(value)
+        parsed_lines.append(row)
+    header = parsed_lines[0]
+    values = [value for row in parsed_lines[1:] for value in row]
+    locations = [(line_number, column) for line_number, line in source_lines[1:]
+                 for column, _ in enumerate(line.split(), 1)]
     if len(header) not in (6, 7):
         raise CalculationError("В первой строке требуется 6 чисел для круглых или 7 для плоских электродов.")
     position = 0
 
-    def take(count):
-        """Извлекает очередной блок DAT, сообщая об обрыве файла до расчёта."""
+    def take(count, label="расчётные данные"):
+        """Извлекает блок DAT; при обрыве называет раздел и число недостающих значений."""
         nonlocal position
         if count < 0 or position + count > len(values):
-            raise CalculationError(f"Недостаточно данных после числового поля {position}.")
+            raise CalculationError(f"DAT закончился: раздел «{label}» требует {count} чисел, осталось {len(values) - position}. Дополните этот раздел; последнее число файла находится в строке {source_lines[-1][0]}.")
         result = values[position:position + count]
         position += count
         return result
@@ -91,20 +102,42 @@ def parse_dat(text, name="Расчёт"):
         case.radius, case.electrode_length = header[4:6]
         if case.radius < 0 or case.electrode_length < 0:
             raise CalculationError("Радиус и длина электрода не могут быть отрицательными.")
-    case.coordinates = [take(2) for _ in range(coordinate_count)]
-    pair_count = integer(take(1)[0], 1, n - 1, "Количество пар")
+    case.coordinates = [take(2, f"координаты № {i + 1}: X и Y") for i in range(coordinate_count)]
+    pair_count = integer(take(1, "количество пар")[0], 1, n - 1, "Количество пар")
+    pair_start = position
     remaining = len(values) - position
     if remaining == 4 * pair_count:
         records = [take(4) for _ in range(pair_count)]
         case.pairs = [r[:2] for r in records]
         case.fixed_voltages = [r[2:] for r in records]
     else:
-        case.pairs = [take(2) for _ in range(pair_count)]
-        case.relaxation, case.tolerance, np_value = take(3)
+        case.pairs = [take(2, f"пара № {i + 1}: два номера электродов") for i in range(pair_count)]
+        settings_start = position
+        case.relaxation, case.tolerance, np_value = take(3, "шаг подбора, допуск мощности и количество силовых групп")
+        if np_value != int(np_value) or not 1 <= np_value <= 15 or not 0 < case.relaxation <= 1:
+            pair_line = locations[pair_start][0]
+            same_line_values = [v for v, location in zip(values[pair_start:], locations[pair_start:]) if location[0] == pair_line]
+            if (len(same_line_values) > 2 * pair_count and len(same_line_values) % 2 == 0
+                    and all(v == int(v) and v > 0 for v in same_line_values)):
+                extra = same_line_values[2 * pair_count:]
+                missing_electrodes = sorted({int(v) for v in same_line_values if v > n})
+                detail = (f"\nЭлектродов в файле: {n}. Номера {', '.join(map(str, missing_electrodes))} не существуют."
+                          if missing_electrodes else "")
+                raise CalculationError(
+                    f"DAT, строка {pair_line}: указано {pair_count} пар, но в строке записано {len(same_line_values) // 2}. "
+                    f"Лишние номера: {' '.join(format(v, 'g') for v in extra)}.{detail}\n"
+                    "Удалите лишнюю пару либо сначала добавьте нужные электроды и согласуйте количество пар и электрическую схему. "
+                    "Из-за лишних чисел программа не может правильно прочитать следующий раздел питания.")
+            line, column = locations[settings_start]
+            raise CalculationError(
+                f"DAT, строка {line}, значение № {column}: после {pair_count} пар ожидаются шаг подбора (больше 0 и не больше 1), "
+                f"допуск мощности и целое количество силовых групп (1–15). Получено: {case.relaxation:g} {case.tolerance:g} {np_value:g}.\n"
+                "Проверьте, что каждая пара содержит ровно два номера и число пар совпадает с указанным перед ними. "
+                "Пример следующего раздела: 0.02 200. 1.")
         np = integer(np_value, 1, 15, "Количество силовых групп")
         if not 0 < case.relaxation <= 1 or case.tolerance <= 0:
             raise CalculationError("Релаксация должна быть в (0, 1], допуск по мощности — положительным.")
-        groups = [take(2) for _ in range(np)]
+        groups = [take(2, f"силовая группа № {i + 1}: напряжение и мощность") for i in range(np)]
         case.initial_voltages = [g[0] for g in groups]
         case.target_powers = [g[1] for g in groups]
         if any(v == 0 for v in case.initial_voltages) or any(p <= 0 for p in case.target_powers):
@@ -112,8 +145,8 @@ def parse_dat(text, name="Расчёт"):
         nb, na = take(2)
         nb = integer(nb, 1, 1000, "Количество коэффициентов напряжений")
         na = integer(na, 1, 1000, "Количество коэффициентов мощностей")
-        case.voltage_terms = [take(4) for _ in range(nb)]
-        case.power_terms = [take(5) for _ in range(na)]
+        case.voltage_terms = [take(4, f"связь напряжения № {i + 1}") for i in range(nb)]
+        case.power_terms = [take(5, f"связь мощности № {i + 1}") for i in range(na)]
         for row, component, group, _ in case.voltage_terms:
             integer(row, 1, pair_count, "Строка напряжения")
             integer(component, 1, 2, "Компонента напряжения")
@@ -123,12 +156,29 @@ def parse_dat(text, name="Расчёт"):
             integer(voltage_group, 1, np, "Группа источника")
             integer(electrode, 1, n, "Электрод мощности")
             integer(component, 1, 2, "Компонента тока")
-    case.pairs = [[integer(v, 1, n, "Индекс электрода") for v in pair] for pair in case.pairs]
+    case.pairs = [[integer(v, 1, n, f"Пара № {i + 1}, электрод № {j + 1} в паре (всего электродов: {n})")
+                   for j, v in enumerate(pair)] for i, pair in enumerate(case.pairs)]
     if any(a == b for a, b in case.pairs):
         raise CalculationError("Пара должна содержать разные электроды.")
     if position != len(values):
         raise CalculationError(f"После расчётных данных осталось {len(values) - position} чисел; формат отличается от PTOK.")
     return case
+
+
+def geometry_problems(case):
+    """Возвращает выходы координат за ванну для предупреждений формы и calculate.
+
+    Ось X отсчитывается от середины поперечного размера, Y — от начала ванны.
+    Концы плоских электродов допускаются на границе; координаты не исправляются.
+    """
+    problems = []
+    for i, (x, y) in enumerate(case.coordinates):
+        label = f"Электрод № {i // 2 + 1}, конец {i % 2 + 1}" if case.flat else f"Электрод № {i + 1}"
+        if not -case.length / 2 <= x <= case.length / 2:
+            problems.append(f"{label}: X = {x:.2f}, допустимо от {-case.length / 2:.2f} до {case.length / 2:.2f}.")
+        if not 0 <= y <= case.height:
+            problems.append(f"{label}: Y = {y:.2f}, допустимо от 0.00 до {case.height:.2f}.")
+    return problems
 
 
 def solve_linear(matrix, right):
@@ -278,8 +328,13 @@ def calculate(case, radii=None, electrode_lengths=None, extra_equations=None, ma
     Релаксация и критерий остановки сохранены из TOKS.FOR; матрица DA —
     исходная итерационная матрица, не полный якобиан. Возвращает JSON-совместимый
     словарь; несходимость ограничена max_iterations и не выдаётся за результат.
+    До вычислений geometry_problems запрещает электроды вне размеров ванны.
     """
     try:
+        problems = geometry_problems(case)
+        if problems:
+            raise CalculationError("Электроды находятся за пределами печи:\n" + "\n".join(problems) +
+                                   "\nИсправьте координаты в таблице «Печь и электроды» либо верните правильные размеры печи. Координаты автоматически не масштабируются.")
         resistance = flat_resistances(case) if case.flat else round_resistances(case, radii, electrode_lengths)
         n = case.electrode_count
         matrix = []

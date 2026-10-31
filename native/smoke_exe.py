@@ -12,17 +12,15 @@ from tok_core import calculate, load_case
 
 
 def smoke(binary_directory=None):
-    """Проверяет токи и PLOT6 в обычных и многопроцессорной сборках EXE.
+    """Проверяет токи и PLOT6 в единственной сборке TOK26-fast.exe.
 
     Для проверки независимости удаляет Python/Tcl-переменные и оставляет в PATH
     только системный каталог Windows. Сопоставляет EXE с Python и записывает
     SHA-256 сборок; не управляет окнами и не использует DOSBox.
     """
     native = Path(__file__).resolve().parent
-    binaries_path = Path(binary_directory).resolve() if binary_directory else native / "dist/release"
-    executables = ["TOK26-console.exe", "TOK26.exe"]
-    if (binaries_path / "TOK26-fast.exe").exists():
-        executables.append("TOK26-fast.exe")
+    binaries_path = Path(binary_directory).resolve() if binary_directory else native / "dist/update-fast"
+    executables = ["TOK26-fast.exe"]
     sources = native.parent / "ТОК1"
     manifest = [{"source": "CIRCLE.DAT"}, {"source": "BOX.DAT"}]
     environment = {key: value for key, value in os.environ.items()
@@ -32,7 +30,7 @@ def smoke(binary_directory=None):
     with tempfile.TemporaryDirectory(prefix="tok-native-check-") as directory:
         output = Path(directory) / "result.json"
         for executable in executables:
-            fixtures = manifest[:2] if executable == "TOK26-console.exe" else manifest[:1]
+            fixtures = manifest
             for fixture in fixtures:
                 source = sources / fixture["source"]
                 process = subprocess.run([str(binaries_path / executable), "calculate", str(source), "--output", str(output)],

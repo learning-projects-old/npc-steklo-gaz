@@ -32,24 +32,24 @@ def parameters_from_text(text):
 
 
 def format_result(result):
-    """Формирует читаемый отчёт GUI из подтверждённых результатов calculate."""
+    """Форматирует отчёт GUI до двух десятичных знаков, не изменяя результаты calculate."""
     case = result["case"]
     lines = [f"ТОК — {result['name']}", "",
              f"Электроды: {'плоские' if case['flat'] else 'круглые'}; количество: {case['electrode_count']}",
              f"Итераций подбора напряжения: {result['iterations']}",
              "Числа сохраняют единицы исходного DAT; преобразование единиц не выполняется.", ""]
     for i, voltage in enumerate(result["group_voltages"]):
-        lines.append(f"Группа {i + 1}: U₀ = {voltage:.6f}; P = {result['powers'][i]:.6f}; ΔP = {result['power_errors'][i]:.6f}")
+        lines.append(f"Группа {i + 1}: U₀ = {voltage:.2f}; P = {result['powers'][i]:.2f}; ΔP = {result['power_errors'][i]:.2f}")
     lines.extend(["", "Электрод        Re(I)          Im(I)           |I|", "─" * 62])
     for i, ((real, imaginary), magnitude) in enumerate(zip(result["currents"], result["current_magnitudes"]), 1):
-        lines.append(f"{i:8d}  {real:14.6f} {imaginary:14.6f} {magnitude:14.6f}")
+        lines.append(f"{i:8d}  {real:14.2f} {imaginary:14.2f} {magnitude:14.2f}")
     for key, title in (("resistance_matrix", "Матрица сопротивлений"), ("system_matrix", "Матрица линейной системы")):
         if key in result:
             lines.extend(["", title])
-            lines.extend(" ".join(f"{v:12.7f}" for v in row) for row in result[key])
+            lines.extend(" ".join(f"{v:12.2f}" for v in row) for row in result[key])
     if "field" in result:
         field = result["field"]
-        lines.extend(["", f"Поле PLOT6: сетка 51 × 137, минимум {field['minimum']:.9g}, максимум {field['maximum']:.9g}"])
+        lines.extend(["", f"Поле PLOT6: сетка 51 × 137, минимум {field['minimum']:.2f}, максимум {field['maximum']:.2f}"])
     return "\n".join(lines)
 
 

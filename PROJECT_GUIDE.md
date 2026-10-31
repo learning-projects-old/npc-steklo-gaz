@@ -3,7 +3,7 @@
 ## ТОК 26 — современное приложение Windows
 
 31.10.2026 выполнен перенос вычислительного комплекта FORTRAN/DOS на Python.
-Запуск: `native/dist/release/TOK26.exe`, Python и DOSBox устанавливать не требуется.
+Запуск: `native/dist/update-fast/TOK26-fast.exe`, Python и DOSBox устанавливать не требуется.
 
 - [Инструкция ТОК 26](native/README.md).
 - [Обратная разработка и восстановленные формулы](native/REVERSE_ENGINEERING.md).

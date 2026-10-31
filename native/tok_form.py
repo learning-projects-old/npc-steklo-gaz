@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from legacy_io import format_pair_records, serialize_case
-from tok_core import CalculationError, isolated_group_equations, parse_dat
+from tok_core import CalculationError, geometry_problems, isolated_group_equations, parse_dat
 
 
 def number(text, label):
@@ -83,14 +83,14 @@ class EditableTable(ttk.Frame):
             self.editor = None
             entry.destroy()
 
-    def set_rows(self, rows):
-        """Заменяет содержимое при загрузке Case, сохраняя заданные столбцы."""
+    def set_rows(self, rows, number_format=".12g"):
+        """Заполняет таблицу: ввод сохраняет точность, результаты задают формат .2f."""
         self.cancel_edit()
         children = self.tree.get_children()
         if children:
             self.tree.delete(*children)
         for i, row in enumerate(rows, 1):
-            self.tree.insert("", "end", values=[i] + [format(value, ".12g") for value in row])
+            self.tree.insert("", "end", values=[i] + [format(value, number_format) for value in row])
 
     def rows(self):
         """Возвращает проверенные числовые строки без служебного номера."""
@@ -122,6 +122,7 @@ class CaseForm(ttk.Frame):
         self._syncing = False
         self._last_raw = ""
         self._last_form = None
+        self.on_change = None
         self.case = None
         self.fields = {}
         split = ttk.Panedwindow(self, orient="horizontal")
@@ -297,6 +298,7 @@ class CaseForm(ttk.Frame):
         if self.case is None or self._syncing:
             return
         self._syncing = True
+        changed = False
         try:
             text = self.raw.get("1.0", "end-1c")
             if text != self._last_raw:
@@ -318,6 +320,7 @@ class CaseForm(ttk.Frame):
                 self.book.select(selected)
                 self.raw.mark_set("insert", cursor)
                 self.raw.yview_moveto(scroll[0])
+                changed = True
             elif self.form_snapshot() != self._last_form:
                 case, options = self.read()
                 canonical = serialize_case(case)
@@ -335,7 +338,13 @@ class CaseForm(ttk.Frame):
                 self.case = deepcopy(case)
                 self._last_raw = text
                 self._last_form = self.form_snapshot()
+                changed = True
             self.sync_status.set("DAT и форма синхронизированы.")
+            problems = geometry_problems(self.case)
+            self.notice.set(("Нужно изменить координаты после изменения размеров печи.\n" + "\n".join(problems)) if problems else
+                            f"Допустимые координаты: X от {-self.case.length / 2:.2f} до {self.case.length / 2:.2f}; Y от 0.00 до {self.case.height:.2f}.")
+            if changed and self.on_change:
+                self.on_change()
         finally:
             self._syncing = False
 

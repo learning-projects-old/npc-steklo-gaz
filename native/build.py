@@ -10,14 +10,14 @@ from tok_core import CalculationError, load_case
 
 
 def build(output_directory=None):
-    """Собирает GUI/CLI с текстовыми примерами, без DOS EXE и без DOSBox.
+    """Собирает единственный TOK26-fast.exe с GUI, CLI и встроенными примерами.
 
     Использует установленный PyInstaller из текущего Python. Отбирает только
     распознаваемые DAT; оригинальные каталоги остаются неизменными.
     output_directory позволяет собрать обновление рядом с работающей версией.
     """
     native = Path(__file__).resolve().parent
-    destination_directory = Path(output_directory).resolve() if output_directory else native / "dist/release"
+    destination_directory = Path(output_directory).resolve() if output_directory else native / "dist/update-fast"
     root = native.parent / "ТОК1"
     presets = native / "presets"
     presets.mkdir(exist_ok=True)
@@ -38,7 +38,7 @@ def build(output_directory=None):
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination)
         count += 1
-    for name, console in (("TOK26", False), ("TOK26-console", True), ("TOK26-fast", False)):
+    for name, console in (("TOK26-fast", False),):
         command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onefile",
                    "--distpath", str(destination_directory),
                    "--name", name, "--console" if console else "--windowed",

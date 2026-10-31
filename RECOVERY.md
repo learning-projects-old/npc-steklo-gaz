@@ -2,7 +2,7 @@
 
 ## ТОК 26: восстановление современного приложения
 
-Перенос от 31.10.2026 находится в `native/`. Готовое приложение: `native/dist/release/TOK26.exe`.
+Перенос от 31.10.2026 находится в `native/`. Готовое приложение: `native/dist/update-fast/TOK26-fast.exe`.
 Это самостоятельный Windows x64 EXE; DOSBox и установленный Python для запуска не требуются.
 
 Для повторной сборки нужны исходники `native/*.py`, `native/requirements-build.txt`, `native/README.md`

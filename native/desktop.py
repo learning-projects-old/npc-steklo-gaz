@@ -217,24 +217,24 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
         field_canvas.create_rectangle(left, top, left + 137 * zoom, top + 51 * zoom, outline="#153c4b")
         for tick in range(6):
             x = left + tick / 5 * 137 * zoom
-            field_canvas.create_text(x, top + 51 * zoom + 18, text=f"{field['v_axis'][-1] * tick / 5:.3g}")
+            field_canvas.create_text(x, top + 51 * zoom + 18, text=f"{field['v_axis'][-1] * tick / 5:.2f}")
         field_canvas.create_text(left + 68.5 * zoom, top + 51 * zoom + 45, text="Продольная координата")
-        field_canvas.create_text(left - 15, top, anchor="e", text=f"{field['u_axis'][-1]:.3g}")
+        field_canvas.create_text(left - 15, top, anchor="e", text=f"{field['u_axis'][-1]:.2f}")
         field_canvas.create_text(left - 15, top + 25.5 * zoom, anchor="e", text="0")
-        field_canvas.create_text(left - 15, top + 51 * zoom, anchor="e", text=f"{field['u_axis'][0]:.3g}")
+        field_canvas.create_text(left - 15, top + 51 * zoom, anchor="e", text=f"{field['u_axis'][0]:.2f}")
         field_canvas.create_text(left - 55, top + 25.5 * zoom, text="Поперечная\nкоордината", angle=90)
         legend_x = left + 137 * zoom + 30
         for k in range(100):
             y = top + k / 100 * 51 * zoom
             field_canvas.create_rectangle(legend_x, y, legend_x + 14, y + 51 * zoom / 100 + 1, fill=color_for_value(1 - k / 100), outline="")
-        field_canvas.create_text(legend_x - 2, top - 15, anchor="w", text=f"{high:.4g}")
-        field_canvas.create_text(legend_x - 2, top + 51 * zoom + 18, anchor="w", text=f"{low:.4g}")
+        field_canvas.create_text(legend_x - 2, top - 15, anchor="w", text=f"{high:.2f}")
+        field_canvas.create_text(legend_x - 2, top + 51 * zoom + 18, anchor="w", text=f"{low:.2f}")
 
     def show_result(result):
-        """Обновляет таблицы, отчёт и диаграммы только после успешного расчёта."""
+        """Показывает результаты с двумя десятичными знаками, не округляя state для экспорта."""
         state["result"] = result
-        group_table.set_rows([[v, result["powers"][i], result["power_errors"][i]] for i, v in enumerate(result["group_voltages"])])
-        current_table.set_rows([list(current) + [magnitude] for current, magnitude in zip(result["currents"], result["current_magnitudes"])])
+        group_table.set_rows([[v, result["powers"][i], result["power_errors"][i]] for i, v in enumerate(result["group_voltages"])], number_format=".2f")
+        current_table.set_rows([list(current) + [magnitude] for current, magnitude in zip(result["currents"], result["current_magnitudes"])], number_format=".2f")
         summary.set(f"{result['name']}: {len(result['currents'])} электродов. Максимальный ток {max(result['current_magnitudes'], default=0):,.2f} А." if result["currents"] else
                     f"{result['name']}: архивное поле мощности, 6987 узлов.")
         report.configure(state="normal")
@@ -243,7 +243,7 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
         report.configure(state="disabled")
         if "field" in result:
             f = result["field"]
-            field_summary.set(f"Плотность мощности PLOT6. Сетка 51 × 137; минимум {f['minimum']:.6g}, максимум {f['maximum']:.6g}. Единицы — как в исходной методике.")
+            field_summary.set(f"Плотность мощности PLOT6. Сетка 51 × 137; минимум {f['minimum']:.2f}, максимум {f['maximum']:.2f}. Единицы — как в исходной методике.")
         else:
             field_summary.set("Поле мощности не рассчитывалось. Выберите режим PLOT6 в исходных данных.")
         export_button.configure(state="normal")
@@ -252,9 +252,13 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
         draw_field()
         top_book.select(field_tab if "field" in result else results_tab)
 
-    def open_file(path=None):
-        """Открывает расчётный DAT или старый графический TOKGR без изменения архива."""
-        if state["future"] is not None and not state["future"].done():
+    def open_file(path=None, select_input=True):
+        """Загружает данные; для примера не переключает вкладку до готового результата.
+
+        Возвращает True только после успешной загрузки, чтобы show_example
+        не запускал старые данные после ошибки открытия одноимённого файла.
+        """
+        if state["future"] is not None:
             status.set("Дождитесь завершения текущего расчёта.")
             return
         path = path or filedialog.askopenfilename(title="Открыть расчёт или диаграмму", initialdir=resources_path(), filetypes=[("Данные ТОК", "*.DAT *.dat"), ("Все файлы", "*")])
@@ -306,18 +310,26 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
             voltage_format.set("Действующее значение и фаза" if is_plot else "Действительная и мнимая части")
             subtitle.set(f"{path.name} — {'плоские' if case.flat else 'круглые'} электроды, {case.electrode_count} шт.")
             status.set("Проверьте размеры печи и таблицы. Изменение чисел выполняется двойным щелчком.")
-            top_book.select(input_tab)
+            if select_input:
+                top_book.select(input_tab)
+            return True
         except (OSError, CalculationError) as error:
             messagebox.showerror("Не удалось открыть данные", str(error), parent=window)
 
     def poll():
-        """Принимает результат потока через after; ошибки возвращаются в интерфейс."""
+        """Принимает результат и снимает блокировку только после обработки текущей задачи."""
         future = state["future"]
         if not future.done():
             window.after(60, poll)
             return
         calculate_button.configure(state="normal")
         open_button.configure(state="normal")
+        for button in example_buttons:
+            button.configure(state="normal")
+        state["future"] = None
+        if state.get("submitted_revision", 0) != state.get("revision", 0):
+            status.set("Исходные данные изменились во время расчёта. Проверьте их и нажмите «Рассчитать» снова.")
+            return
         try:
             show_result(future.result())
             status.set("Расчёт завершён. Результаты можно сохранить в JSON или в старых форматах ТОК.")
@@ -327,7 +339,7 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
 
     def start_calculation():
         """Читает поля формы, выбирает PTOK/PLOT6 и запускает численное ядро."""
-        if state["future"] is not None and not state["future"].done():
+        if state["future"] is not None:
             status.set("Дождитесь завершения текущего расчёта.")
             return
         try:
@@ -346,7 +358,10 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
             archive_button.configure(state="disabled")
             calculate_button.configure(state="disabled")
             open_button.configure(state="disabled")
+            for button in example_buttons:
+                button.configure(state="disabled")
             status.set("Выполняется расчёт поля мощности…" if function is calculate_field else "Выполняется подбор напряжений и расчёт токов…")
+            state["submitted_revision"] = state.get("revision", 0)
             state["future"] = executor.submit(function, case, **options)
             window.after(60, poll)
         except (CalculationError, ValueError) as error:
@@ -423,12 +438,30 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
             potassium = number(composition["potassium"].get(), "K₂O")
             temperature = number(composition["temperature"].get(), "Температура")
             value = glass_resistivity(sodium, potassium, temperature)
-            glass_result.set(f"При {temperature:g} °C: удельное сопротивление {value:.8g}")
-            glass_table.set_rows([[t, glass_resistivity(sodium, potassium, t)] for t in range(1000, 1701, 50)])
+            glass_result.set(f"При {temperature:g} °C: удельное сопротивление {value:.2f}")
+            glass_table.set_rows([[t, glass_resistivity(sodium, potassium, t)] for t in range(1000, 1701, 50)], number_format=".2f")
         except CalculationError as error:
             messagebox.showerror("Состав стекла", str(error), parent=window)
 
     ttk.Button(glass_controls, text="Рассчитать сопротивление", command=calculate_glass).pack(side="left")
+
+    def invalidate_result():
+        """После правки формы убирает устаревший результат и отмечает версию входных данных."""
+        state["revision"] = state.get("revision", 0) + 1
+        state["result"] = None
+        group_table.set_rows([])
+        current_table.set_rows([])
+        diagram.delete("all")
+        field_canvas.delete("all")
+        report.configure(state="normal")
+        report.delete("1.0", "end")
+        report.configure(state="disabled")
+        export_button.configure(state="disabled")
+        archive_button.configure(state="disabled")
+        message = "Данные изменены. Проверьте координаты электродов и выполните расчёт заново."
+        summary.set(message)
+        field_summary.set(message)
+        status.set(message)
 
     def close():
         """Закрывает собственное окно и завершает исполнитель после текущего расчёта."""
@@ -438,16 +471,19 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
     open_button = ttk.Button(controls, text="Открыть данные…", command=open_file)
     open_button.pack(side="left", padx=(0, 8))
     def show_example(name):
-        """Открывает встроенный пример и сразу показывает рассчитанный результат."""
-        if state["future"] is not None and not state["future"].done():
+        """Загружает пример и показывает результат без промежуточного перехода на ввод."""
+        if state["future"] is not None:
             status.set("Дождитесь завершения текущего расчёта.")
             return
-        open_file(resources_path() / name)
-        if state["file"] and state["file"].name == name:
+        if open_file(resources_path() / name, select_input=False):
             start_calculation()
 
-    ttk.Button(controls, text="Пример токов", command=lambda: show_example("CIRCLE.DAT")).pack(side="left", padx=(0, 8))
-    ttk.Button(controls, text="Пример поля", command=lambda: show_example("PLOT6.DAT")).pack(side="left", padx=(0, 8))
+    example_buttons = [
+        ttk.Button(controls, text="Пример токов", command=lambda: show_example("CIRCLE.DAT")),
+        ttk.Button(controls, text="Пример поля", command=lambda: show_example("PLOT6.DAT")),
+    ]
+    for button in example_buttons:
+        button.pack(side="left", padx=(0, 8))
     calculate_button = ttk.Button(controls, text="Рассчитать", style="Primary.TButton", command=start_calculation)
     calculate_button.pack(side="left", padx=(4, 12))
     export_button = ttk.Button(controls, text="Сохранить результат…", command=export_json, state="disabled")
@@ -459,6 +495,7 @@ def run_gui(initial_file=None, auto_calculate=False, workers=1):
     quantity_box.bind("<<ComboboxSelected>>", draw_diagram)
     field_canvas.bind("<Configure>", draw_field)
     window.protocol("WM_DELETE_WINDOW", close)
+    form.on_change = invalidate_result
     if initial_file:
         open_file(initial_file)
     elif (resources_path() / "CIRCLE.DAT").exists():

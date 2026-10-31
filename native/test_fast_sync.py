@@ -59,6 +59,19 @@ class SynchronizationTests(unittest.TestCase):
         self.form.synchronize()
         self.assertEqual(self.form.read()[1]['radii'][0], .3)
 
+    def test_size_change_requires_coordinate_review(self):
+        """Уменьшение H синхронизирует DAT, предупреждает и снимает старый результат."""
+        changed = []
+        self.form.on_change = lambda: changed.append(True)
+        self.form.fields['height'].set('19')
+        self.form.synchronize()
+        self.assertIn('Нужно изменить координаты', self.form.notice.get())
+        self.assertIn('37.25', self.form.notice.get())
+        self.assertEqual(changed, [True])
+        self.assertEqual(parse_dat(self.form.raw.get('1.0', 'end-1c')).height, 19)
+        self.form.synchronize()
+        self.assertEqual(changed, [True])
+
 
 class ParallelTests(unittest.TestCase):
     """Сравнивает все узлы и измеряет холодный и повторный расчёты."""

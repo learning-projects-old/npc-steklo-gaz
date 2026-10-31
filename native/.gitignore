@@ -5,4 +5,5 @@ __pycache__/
 oracle/
 presets/
 dist/*.exe
-dist/update-fast/
+dist/update-fast/*
+!dist/update-fast/TOK26-fast.exe

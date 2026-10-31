@@ -21,8 +21,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Cannot install build dependencies.' }
     }
     elseif ($Action -in @('Run', 'RunFast')) {
-        $executableName = if ($Action -eq 'RunFast') { 'TOK26-fast.exe' } else { 'TOK26.exe' }
-        $executable = Join-Path $PSScriptRoot "dist\release\$executableName"
+        $executable = Join-Path $PSScriptRoot 'dist\update-fast\TOK26-fast.exe'
         if (-not (Test-Path -LiteralPath $executable)) { throw 'Build the application first.' }
         $application = Start-Process -FilePath $executable -PassThru -Wait
         if ($application.ExitCode -ne 0) { throw "Application exited with code $($application.ExitCode)." }
@@ -30,13 +29,13 @@ try {
     else {
         if (-not (Test-Path -LiteralPath $pythonExecutable)) { throw 'Run the Setup configuration first.' }
         if ($Action -eq 'Build') {
-            & $pythonExecutable build.py --output-directory dist/release
+            & $pythonExecutable build.py
             if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
         }
         else {
-            & $pythonExecutable -m unittest -q test_tok test_fast_sync
+            & $pythonExecutable -m unittest -q test_tok test_fast_sync test_diagnostics
             if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
-            & $pythonExecutable smoke_exe.py --binary-directory dist/release
+            & $pythonExecutable smoke_exe.py
             if ($LASTEXITCODE -ne 0) { throw 'Executable checks failed.' }
         }
     }
